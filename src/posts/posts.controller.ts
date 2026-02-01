@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
-import { PostsService } from './posts.service'
-import { CreatePostDto, UpdatePostDto } from './posts.dto'
+import { PostsService } from './posts.service.js'
+import { CreatePostDto, UpdatePostDto } from './posts.dto.js'
+import { PostModel } from 'generated/prisma/models.js'
 
 @Controller('posts')
 export class PostsController {
@@ -12,8 +13,10 @@ export class PostsController {
   }
 
   @Get(':id')
-  getPost(@Param('id') id: string): string {
-    return this.postsService.getPost(id)
+  getPost(@Param('id') id: string): Promise<PostModel | null> {
+    return this.postsService.getPost({
+      id: Number(id),
+    })
   }
 
   @Post()
