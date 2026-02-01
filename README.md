@@ -1,98 +1,161 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# NestJS CRUD Application
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 📝 Mô tả
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Đây là một ứng dụng RESTful API được xây dựng với NestJS framework, cung cấp các chức năng CRUD (Create, Read, Update, Delete) cơ bản cho hệ thống quản lý bài viết (Posts) và người dùng (Users) với xác thực JWT.
 
-## Description
+## ✨ Tính năng
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- 🔐 **Authentication & Authorization**: Hệ thống xác thực JWT với Refresh Token
+- 📝 **Posts Management**: Quản lý bài viết (CRUD operations)
+- 👥 **User Management**: Quản lý người dùng
+- 🗄️ **Database Design**: Thiết kế cơ sở dữ liệu với Prisma ORM
+- ✅ **Validation**: Validation dữ liệu với class-validator và class-transformer
+- 🧪 **Testing**: Unit tests và E2E tests
 
-## Project setup
+## 🏗️ Database Schema
 
-```bash
-$ npm install
+Dự án sử dụng SQLite với Prisma ORM. Dưới đây là sơ đồ cơ sở dữ liệu:
+
+```mermaid
+erDiagram
+    User ||--o{ Post : creates
+    User ||--o{ RefreshToken : has
+
+    User {
+        int id PK
+        string email UK
+        string name
+        string password
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    Post {
+        int id PK
+        string title
+        string content
+        int authorId FK
+        datetime createdAt
+        datetime updatedAt
+    }
+
+    RefreshToken {
+        string token UK
+        int userId FK
+        datetime expiresAt
+        datetime createdAt
+    }
 ```
 
-## Compile and run the project
+### Mối quan hệ
+
+- **Post → User**: Mỗi bài viết thuộc về một người dùng (nhiều-một). Khi xóa user thì xóa tất cả posts của user đó (cascade delete)
+- **RefreshToken → User**: Mỗi refresh token thuộc về một người dùng. Khi xóa user thì xóa tất cả tokens của user đó (cascade delete)
+
+## 🚀 Cài đặt
 
 ```bash
-# development
+# Clone repository
+$ git clone <repository-url>
+
+# Cài đặt dependencies
+$ npm install
+
+# Setup Prisma database
+$ npx prisma generate
+$ npx prisma migrate dev --name init
+
+# Seed database (optional)
+$ npx tsx script.ts
+```
+
+## 💻 Chạy ứng dụng
+
+```bash
+# Development mode
 $ npm run start
 
-# watch mode
+# Watch mode (tự động restart khi có thay đổi)
 $ npm run start:dev
 
-# production mode
+# Production mode
 $ npm run start:prod
 ```
 
-## Run tests
+## 🧪 Chạy tests
 
 ```bash
-# unit tests
+# Unit tests
 $ npm run test
 
-# e2e tests
+# E2E tests
 $ npm run test:e2e
 
-# test coverage
+# Test coverage
 $ npm run test:cov
 ```
 
-## Deployment
+## 📚 API Endpoints
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Posts
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- `GET /posts` - Lấy danh sách tất cả bài viết
+- `GET /posts/:id` - Lấy thông tin một bài viết
+- `POST /posts` - Tạo bài viết mới
+- `PATCH /posts/:id` - Cập nhật bài viết
+- `DELETE /posts/:id` - Xóa bài viết
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+## 🛠️ Tech Stack
+
+- **Framework**: NestJS 11.x
+- **Language**: TypeScript
+- **Runtime**: Node.js 20.19.4
+- **Database**: SQLite
+- **ORM**: Prisma 7.3.0
+- **Database Adapter**: better-sqlite3
+- **Validation**: class-validator, class-transformer
+- **Testing**: Jest
+- **Script Runner**: tsx (TypeScript execution)
+
+## 📁 Cấu trúc thư mục
+
+```
+src/
+├── posts/              # Module quản lý bài viết
+│   ├── posts.controller.ts
+│   ├── posts.service.ts
+│   ├── posts.dto.ts
+│   └── posts.module.ts
+├── app.module.ts       # Root module
+├── app.controller.ts
+├── app.service.ts
+└── main.ts            # Entry point
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## 📝 Files quan trọng
 
-## Resources
+- `designdb.dbml` - Database Markup Language schema
+- `designdb.dbdiagram` - Database diagram configuration
+- `prisma/schema.prisma` - Prisma schema với User, Post, RefreshToken models
+- `script.ts` - Script demo tạo dữ liệu với Prisma Client
+- `mise.toml` - Node.js version management (20.19.4)
 
-Check out a few resources that may come in handy when working with NestJS:
+## 🔧 Prisma Commands
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+# Generate Prisma Client
+$ npx prisma generate
 
-## Support
+# Create migration
+$ npx prisma migrate dev --name <migration-name>
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+# Reset database (development only!)
+$ npx prisma migrate reset
 
-## Stay in touch
+# Open Prisma Studio (database GUI)
+$ npx prisma studio
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+# Check migration status
+$ npx prisma migrate status
+```

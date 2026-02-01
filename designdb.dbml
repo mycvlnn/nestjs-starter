@@ -1,0 +1,33 @@
+Project CRUD {
+  database_type: 'SQLite'
+  Note: 'Sử dụng Prisma ORM. Columne Type cũng theo Prisma'
+}
+
+Table User {
+  id        Int      [pk, increment]
+  email     String   [unique]
+  name      String
+  password  String
+  createdAt DateTime [default: `now()`]
+  updatedAt DateTime [note: '@updatedAt']
+}
+
+Table Post {
+  id        Int      [pk, increment]
+  title     String
+  content   String
+  authorId  Int
+  createdAt DateTime [default: `now()`]
+  updatedAt DateTime [note: '@updatedAt']
+}
+
+Ref: Post.authorId > User.id [delete: cascade, update: no action]  // Khi xóa người dùng thì xóa hết post của người đó
+
+Table RefreshToken {
+  token     String   [unique] // Có thể pk cũng được, nhưng mình không cần liên kết khóa ngoại nên thôi
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime [default: `now()`]
+}
+
+Ref: RefreshToken.userId > User.id  [delete: cascade, update: no action] // Khi xóa người dùng thì xóa hết token của người đó
