@@ -8,7 +8,7 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getPosts(): string {
+  getPosts() {
     return this.postsService.getPosts()
   }
 

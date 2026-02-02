@@ -1,13 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { CreatePostDto, UpdatePostDto } from './posts.dto.js'
-import { PrismaService } from '../prisma.service.js'
-import { Post, Prisma } from '../../generated/prisma/client.js'
+import { PrismaService } from '../../shared/services/prisma.service.js'
+import { Post, Prisma } from '../../../generated/prisma/client.js'
 
 @Injectable()
 export class PostsService {
   constructor(private prisma: PrismaService) {}
-  getPosts(): string {
-    return 'This action returns all posts'
+  getPosts() {
+    return this.prisma.post.findMany()
   }
 
   getPost(postWhereUniqueInput: Prisma.PostWhereUniqueInput): Promise<Post | null> {
@@ -17,7 +17,13 @@ export class PostsService {
   }
 
   createPost(post: CreatePostDto) {
-    return post
+    return this.prisma.post.create({
+      data: {
+        title: post.title,
+        content: post.content,
+        authorId: 1,
+      },
+    })
   }
 
   updatePost(id: string, post: UpdatePostDto) {
