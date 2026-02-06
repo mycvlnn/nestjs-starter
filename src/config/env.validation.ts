@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { plainToInstance } from 'class-transformer'
 import { IsEnum, IsNumber, IsString, validateSync } from 'class-validator'
 import { existsSync } from 'fs'
@@ -23,11 +24,11 @@ export class EnvironmentVariables {
   JWT_SECRET: string
 }
 
-export function validate(config: Record<string, unknown>) {
+function validate(config: Record<string, unknown>) {
   const envPath = resolve(process.cwd(), '.env')
 
   if (!existsSync(envPath)) {
-    throw new Error(`File .env không tồn tại tại đường dẫn: ${envPath}`)
+    throw new Error(`File .env doesn't exist in path: ${envPath}`)
   }
 
   const validatedConfig = plainToInstance(EnvironmentVariables, config, {
@@ -44,3 +45,5 @@ export function validate(config: Record<string, unknown>) {
 
   return validatedConfig
 }
+
+export const envConfig = validate(process.env)
