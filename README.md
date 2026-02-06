@@ -67,7 +67,7 @@ $ npx prisma generate
 $ npx prisma migrate dev --name init
 
 # Seed database (optional)
-$ npx tsx script.ts
+$ npx prisma db seed
 ```
 
 ## 💻 Chạy ứng dụng
