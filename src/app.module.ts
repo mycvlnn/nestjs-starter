@@ -3,9 +3,10 @@ import { AppController } from './app.controller.js'
 import { AppService } from './app.service.js'
 import { PostsModule } from './modules/posts/posts.module.js'
 import { SharedModule } from './shared/shared.module.js'
+import { AuthModule } from './modules/auth/auth.module.js'
 
 @Module({
-  imports: [PostsModule, SharedModule],
+  imports: [SharedModule, PostsModule, AuthModule],
   controllers: [AppController],
   providers: [AppService],
 })

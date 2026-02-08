@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module.js'
-import { ValidationPipe } from '@nestjs/common'
+import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common'
 import { envConfig } from './config/env.validation.js'
 
 async function bootstrap() {
@@ -9,6 +9,21 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+      exceptionFactory(errors) {
+        const formattedErrors = errors.map((err) => ({
+          field: err.property,
+          errors: Object.values(err.constraints ?? {}),
+        }))
+
+        return new UnprocessableEntityException({
+          message: 'Validation failed',
+          errors: formattedErrors,
+        })
+      },
     }),
   )
 
