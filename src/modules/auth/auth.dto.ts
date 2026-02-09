@@ -1,4 +1,5 @@
 import { IsEmail, IsString, MinLength } from 'class-validator'
+import { Exclude } from 'class-transformer'
 import { Match } from '../../common/decorators/match.decorator.js'
 
 export class LoginDto {
@@ -17,4 +18,18 @@ export class RegisterDto extends LoginDto {
   @IsString()
   @MinLength(2)
   name: string
+}
+
+export class UserDto {
+  id: number
+  email: string
+  name: string
+  @Exclude()
+  password: string
+  createdAt: Date
+  updatedAt: Date
+
+  constructor(partial: Partial<UserDto>) {
+    Object.assign(this, partial)
+  }
 }
