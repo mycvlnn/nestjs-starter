@@ -1,9 +1,10 @@
-import { ConflictException, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common'
 import { PrismaService } from '../../shared/services/prisma.service.js'
 import { LoginDto, RegisterDto, UserResDto } from './auth.dto.js'
 import { HashsingService } from '../../shared/services/hashsing.service.js'
 import { TokenService } from '../../shared/services/token.service.js'
 import { isJwtError, isPrismaDuplicateKeyError, isPrismaNotFoundError } from '../../common/guards/error.guard.js'
+import { ValidationException } from '../../shared/exceptions/validation.exception.js'
 
 @Injectable()
 export class AuthService {
@@ -48,18 +49,18 @@ export class AuthService {
     })
 
     if (!user) {
-      throw new UnprocessableEntityException({
-        message: 'Validation failed',
-        errors: [{ field: 'email', error: 'Email does not exist' }],
+      throw new ValidationException({
+        field: 'email',
+        error: 'Email not found',
       })
     }
 
     const isPasswordValid = await this.hashingService.compare(dto.password, user.password)
 
     if (!isPasswordValid) {
-      throw new UnprocessableEntityException({
-        message: 'Validation failed',
-        errors: [{ field: 'password', error: 'Invalid password' }],
+      throw new ValidationException({
+        field: 'password',
+        error: 'Invalid password',
       })
     }
 

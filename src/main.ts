@@ -1,7 +1,8 @@
 import { NestFactory } from '@nestjs/core'
 import { AppModule } from './app.module.js'
-import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common'
+import { ValidationPipe } from '@nestjs/common'
 import { envConfig } from './config/env.validation.js'
+import { ValidationException } from './shared/exceptions/validation.exception.js'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
@@ -19,10 +20,7 @@ async function bootstrap() {
           error: Object.values(err.constraints ?? {}).join(', '),
         }))
 
-        return new UnprocessableEntityException({
-          message: 'Validation failed',
-          errors: formattedErrors,
-        })
+        return new ValidationException(formattedErrors)
       },
     }),
   )
