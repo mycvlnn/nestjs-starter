@@ -20,7 +20,7 @@ export class RegisterDto extends LoginDto {
   name: string
 }
 
-export class UserDto {
+export class UserResDto {
   id: number
   email: string
   name: string
@@ -29,7 +29,12 @@ export class UserDto {
   createdAt: Date
   updatedAt: Date
 
-  constructor(partial: Partial<UserDto>) {
+  constructor(partial: Partial<UserResDto>) {
     Object.assign(this, partial)
   }
+}
+
+export class RefreshTokenDto {
+  @IsString()
+  refreshToken: string
 }

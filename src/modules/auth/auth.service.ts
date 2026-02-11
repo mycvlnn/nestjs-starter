@@ -1,9 +1,10 @@
-import { ConflictException, Injectable, UnprocessableEntityException } from '@nestjs/common'
+import { ConflictException, Injectable, UnauthorizedException, UnprocessableEntityException } from '@nestjs/common'
 import { PrismaService } from '../../shared/services/prisma.service.js'
-import { LoginDto, RegisterDto, UserDto } from './auth.dto.js'
+import { LoginDto, RegisterDto, UserResDto } from './auth.dto.js'
 import { HashsingService } from '../../shared/services/hashsing.service.js'
 import { TokenService } from '../../shared/services/token.service.js'
 import { Prisma } from '../../../generated/prisma/client.js'
+import { JsonWebTokenError } from '@nestjs/jwt'
 
 @Injectable()
 export class AuthService {
@@ -28,7 +29,7 @@ export class AuthService {
       const { accessToken, refreshToken } = await this.generateTokens(user.id)
 
       return {
-        user: new UserDto(user),
+        user: new UserResDto(user),
         accessToken,
         refreshToken,
       }
@@ -66,7 +67,7 @@ export class AuthService {
     const { accessToken, refreshToken } = await this.generateTokens(user.id)
 
     return {
-      user: new UserDto(user),
+      user: new UserResDto(user),
       accessToken,
       refreshToken,
     }
@@ -88,5 +89,60 @@ export class AuthService {
     })
 
     return { accessToken, refreshToken }
+  }
+
+  async refreshToken(token: string) {
+    try {
+      // Xác thực refresh token
+      const { userId } = this.tokenService.verifyRefreshToken(token)
+
+      // Kiểm tra refresh token có tồn tại trong database không. Nếu không có -> văng lỗi
+      const storedToken = await this.prisma.refreshToken.findUniqueOrThrow({
+        where: {
+          token,
+        },
+      })
+
+      // Kiểm tra refresh token đã hết hạn chưa. Nếu đã hết hạn -> văng lỗi
+      if (storedToken.expiresAt < new Date()) {
+        throw new UnauthorizedException('Refresh token has expired')
+      }
+
+      // Xoá refresh token cũ
+      await this.prisma.refreshToken.delete({
+        where: {
+          token,
+        },
+      })
+
+      // Tạo lại access token mới và refresh token mới (nhưng expiresIn vẫn giữ nguyên)
+      const accessToken = this.tokenService.signAcessToken({ userId })
+      const oldExpiresInRefreshToken = (storedToken.expiresAt.getTime() - Date.now()) / 1000 // in seconds
+      const newRefreshToken = this.tokenService.signRefreshToken({ userId }, Math.round(oldExpiresInRefreshToken))
+
+      // Lưu refreshToken vào database
+      await this.prisma.refreshToken.create({
+        data: {
+          userId,
+          token: newRefreshToken,
+          expiresAt: storedToken.expiresAt,
+        },
+      })
+
+      return {
+        accessToken,
+        refreshToken: newRefreshToken,
+      }
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new UnauthorizedException('Refresh token revoked')
+      }
+
+      if (error instanceof JsonWebTokenError) {
+        throw new UnauthorizedException('Invalid refresh token')
+      }
+
+      throw error
+    }
   }
 }

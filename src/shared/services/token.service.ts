@@ -20,7 +20,10 @@ export class TokenService {
     )
   }
 
-  signRefreshToken(payload: SignTokenParams): string {
+  signRefreshToken(
+    payload: SignTokenParams,
+    expiresIn = envConfig.REFRESH_TOKEN_EXPIRES_IN as JwtSignOptions['expiresIn'],
+  ): string {
     return this.jwtService.sign(
       {
         ...payload,
@@ -28,7 +31,7 @@ export class TokenService {
       },
       {
         secret: envConfig.REFRESH_TOKEN_SECRET,
-        expiresIn: envConfig.REFRESH_TOKEN_EXPIRES_IN as JwtSignOptions['expiresIn'],
+        expiresIn,
       },
     )
   }
