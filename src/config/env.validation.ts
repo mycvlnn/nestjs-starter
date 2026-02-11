@@ -21,7 +21,16 @@ export class EnvironmentVariables {
   NODE_ENV: Environment
 
   @IsString()
-  JWT_SECRET: string
+  ACCESS_TOKEN_SECRET: string
+
+  @IsString()
+  REFRESH_TOKEN_SECRET: string
+
+  @IsString()
+  ACCESS_TOKEN_EXPIRES_IN: string
+
+  @IsString()
+  REFRESH_TOKEN_EXPIRES_IN: string
 }
 
 function validate(config: Record<string, unknown>) {
