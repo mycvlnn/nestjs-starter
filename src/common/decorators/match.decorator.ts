@@ -28,4 +28,9 @@ export class MatchConstraint implements ValidatorConstraintInterface {
     const relatedValue = (args.object as any)[relatedPropertyName]
     return value === relatedValue
   }
+
+  defaultMessage(validationArguments?: ValidationArguments): string {
+    const [relatedPropertyName] = validationArguments?.constraints || []
+    return `${validationArguments?.property} must match ${relatedPropertyName}`
+  }
 }

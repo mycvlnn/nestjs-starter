@@ -12,7 +12,7 @@ export class LoginDto {
 
 export class RegisterDto extends LoginDto {
   @IsString()
-  @Match('password', { message: 'Password confirmation does not match password' })
+  @Match('password')
   confirmPassword: string
 
   @IsString()
