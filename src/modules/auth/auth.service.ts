@@ -25,7 +25,13 @@ export class AuthService {
         },
       })
 
-      return new UserDto(user)
+      const { accessToken, refreshToken } = await this.generateTokens(user.id)
+
+      return {
+        user: new UserDto(user),
+        accessToken,
+        refreshToken,
+      }
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException('Email already exists')
@@ -72,7 +78,7 @@ export class AuthService {
     const refreshToken = this.tokenService.signRefreshToken({ userId })
     const decodedRefreshToken = this.tokenService.verifyRefreshToken(refreshToken)
 
-    // Lưu refreshToken vào database (giả sử bạn có một bảng RefreshToken)
+    // Lưu refreshToken vào database
     await this.prisma.refreshToken.create({
       data: {
         userId,
