@@ -3,8 +3,7 @@ import { PrismaService } from '../../shared/services/prisma.service.js'
 import { LoginDto, RegisterDto, UserResDto } from './auth.dto.js'
 import { HashsingService } from '../../shared/services/hashsing.service.js'
 import { TokenService } from '../../shared/services/token.service.js'
-import { Prisma } from '../../../generated/prisma/client.js'
-import { JsonWebTokenError } from '@nestjs/jwt'
+import { isJwtError, isPrismaDuplicateKeyError, isPrismaNotFoundError } from '../../common/guards/error.guard.js'
 
 @Injectable()
 export class AuthService {
@@ -34,7 +33,7 @@ export class AuthService {
         refreshToken,
       }
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+      if (isPrismaDuplicateKeyError(error)) {
         throw new ConflictException('Email already exists')
       }
       throw error
@@ -71,24 +70,6 @@ export class AuthService {
       accessToken,
       refreshToken,
     }
-  }
-
-  // Xử lý tạo ra accessToken và refreshToken sau đó lưu thông tin vào database refreshToken
-  async generateTokens(userId: number) {
-    const accessToken = this.tokenService.signAcessToken({ userId })
-    const refreshToken = this.tokenService.signRefreshToken({ userId })
-    const decodedRefreshToken = this.tokenService.verifyRefreshToken(refreshToken)
-
-    // Lưu refreshToken vào database
-    await this.prisma.refreshToken.create({
-      data: {
-        userId,
-        token: refreshToken,
-        expiresAt: new Date(decodedRefreshToken.exp * 1000),
-      },
-    })
-
-    return { accessToken, refreshToken }
   }
 
   async refreshToken(token: string) {
@@ -134,15 +115,33 @@ export class AuthService {
         refreshToken: newRefreshToken,
       }
     } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+      if (isPrismaNotFoundError(error)) {
         throw new UnauthorizedException('Refresh token revoked')
       }
 
-      if (error instanceof JsonWebTokenError) {
+      if (isJwtError(error)) {
         throw new UnauthorizedException('Invalid refresh token')
       }
 
       throw error
     }
+  }
+
+  // Xử lý tạo ra accessToken và refreshToken sau đó lưu thông tin vào database refreshToken
+  private async generateTokens(userId: number) {
+    const accessToken = this.tokenService.signAcessToken({ userId })
+    const refreshToken = this.tokenService.signRefreshToken({ userId })
+    const decodedRefreshToken = this.tokenService.verifyRefreshToken(refreshToken)
+
+    // Lưu refreshToken vào database
+    await this.prisma.refreshToken.create({
+      data: {
+        userId,
+        token: refreshToken,
+        expiresAt: new Date(decodedRefreshToken.exp * 1000),
+      },
+    })
+
+    return { accessToken, refreshToken }
   }
 }
