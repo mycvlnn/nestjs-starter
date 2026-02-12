@@ -2,17 +2,20 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { PostsService } from './posts.service.js'
 import { CreatePostDto, UpdatePostDto } from './posts.dto.js'
 import { PostModel } from 'generated/prisma/models.js'
+import { Public } from '../../common/decorators/auth.decorator.js'
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
+  @Public()
   getPosts() {
     return this.postsService.getPosts()
   }
 
   @Get(':id')
+  @Public()
   getPost(@Param('id') id: string): Promise<PostModel | null> {
     return this.postsService.getPost({
       id: Number(id),
