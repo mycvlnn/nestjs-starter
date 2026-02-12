@@ -2,6 +2,7 @@ import { Body, Controller, Post, UseGuards } from '@nestjs/common'
 import { AuthService } from './auth.service.js'
 import { LoginDto, RefreshTokenDto, RegisterDto } from './auth.dto.js'
 import { AccessTokenGuard } from '../../shared/guards/access-token.guard.js'
+import { ApiKeyGuard } from '../../shared/guards/api-key.guard.js'
 
 @Controller('auth')
 export class AuthController {
@@ -18,6 +19,7 @@ export class AuthController {
   }
 
   @UseGuards(AccessTokenGuard)
+  @UseGuards(ApiKeyGuard)
   @Post('refresh-token')
   refreshToken(@Body() dto: RefreshTokenDto) {
     return this.authService.refreshToken(dto.refreshToken)

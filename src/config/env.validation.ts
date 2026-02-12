@@ -31,6 +31,9 @@ export class EnvironmentVariables {
 
   @IsString()
   REFRESH_TOKEN_EXPIRES_IN: string
+
+  @IsString()
+  API_KEY_SECRET: string
 }
 
 function validate(config: Record<string, unknown>) {
