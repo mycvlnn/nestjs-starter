@@ -1,8 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common'
 import { PostsService } from './posts.service.js'
-import { CreatePostDto, UpdatePostDto } from './posts.dto.js'
+import { CreatePostBodyDto, UpdatePostDto } from './posts.dto.js'
 import { PostModel } from 'generated/prisma/models.js'
 import { Public } from '../../common/decorators/auth.decorator.js'
+import type { Request } from 'express'
+import { USER_KEY } from '../../constants/common.js'
 
 @Controller('posts')
 export class PostsController {
@@ -23,17 +26,23 @@ export class PostsController {
   }
 
   @Post()
-  createPost(@Body() dto: CreatePostDto) {
-    return this.postsService.createPost(dto)
+  createPost(@Body() dto: CreatePostBodyDto, @Req() req: Request) {
+    const userId = req?.[USER_KEY]?.userId as number
+
+    return this.postsService.createPost(dto, userId)
   }
 
   @Put(':id')
-  updatePost(@Param('id') id: string, @Body() body: UpdatePostDto) {
-    return this.postsService.updatePost(id, body)
+  updatePost(@Param('id') id: string, @Body() body: UpdatePostDto, @Req() req: Request) {
+    const userId = req?.[USER_KEY]?.userId as number
+
+    return this.postsService.updatePost(id, body, userId)
   }
 
   @Delete(':id')
-  deletePost(@Param('id') id: string) {
-    return this.postsService.deletePost(id)
+  deletePost(@Param('id') id: string, @Req() req: Request) {
+    const userId = req?.[USER_KEY]?.userId as number
+
+    return this.postsService.deletePost(id, userId)
   }
 }
