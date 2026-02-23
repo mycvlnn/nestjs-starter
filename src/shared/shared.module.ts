@@ -5,6 +5,8 @@ import { HashsingService } from './services/hashsing.service.js'
 import { TokenService } from './services/token.service.js'
 import { APP_GUARD } from '@nestjs/core'
 import { AccessTokenGuard } from './guards/access-token.guard.js'
+import { ApiKeyGuard } from './guards/api-key.guard.js'
+import { AuthenticationGuard } from './guards/authentication.guard.js'
 
 const sharedServices = [PrismaService, HashsingService, TokenService]
 
@@ -13,9 +15,11 @@ const sharedServices = [PrismaService, HashsingService, TokenService]
   imports: [JwtModule],
   providers: [
     ...sharedServices,
+    AccessTokenGuard,
+    ApiKeyGuard,
     {
       provide: APP_GUARD,
-      useClass: AccessTokenGuard,
+      useClass: AuthenticationGuard,
     },
   ],
   exports: sharedServices,

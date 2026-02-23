@@ -3,7 +3,11 @@ import { PrismaService } from '../../shared/services/prisma.service.js'
 import { LoginDto, RegisterDto, UserResDto } from './auth.dto.js'
 import { HashsingService } from '../../shared/services/hashsing.service.js'
 import { TokenService } from '../../shared/services/token.service.js'
-import { isJwtError, isPrismaDuplicateKeyError, isPrismaNotFoundError } from '../../common/guards/error.guard.js'
+import {
+  isJwtError,
+  isPrismaDuplicateKeyError,
+  isPrismaNotFoundError,
+} from '../../common/guards/error.guard.js'
 import { ValidationException } from '../../shared/exceptions/validation.exception.js'
 
 @Injectable()
@@ -100,7 +104,10 @@ export class AuthService {
       // Tạo lại access token mới và refresh token mới (nhưng expiresIn vẫn giữ nguyên)
       const accessToken = this.tokenService.signAcessToken({ userId })
       const oldExpiresInRefreshToken = (storedToken.expiresAt.getTime() - Date.now()) / 1000 // in seconds
-      const newRefreshToken = this.tokenService.signRefreshToken({ userId }, Math.round(oldExpiresInRefreshToken))
+      const newRefreshToken = this.tokenService.signRefreshToken(
+        { userId },
+        Math.round(oldExpiresInRefreshToken),
+      )
 
       // Lưu refreshToken vào database
       await this.prisma.refreshToken.create({
