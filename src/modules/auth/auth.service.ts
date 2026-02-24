@@ -135,6 +135,37 @@ export class AuthService {
     }
   }
 
+  async logout(token: string, userId: number) {
+    try {
+      // Verify refresh token
+      const { userId: uId } = this.tokenService.verifyRefreshToken(token)
+
+      // Kiểm tra refresh token có thuộc về user đang logout không, nếu không -> văng lỗi
+      if (uId !== userId) {
+        throw new UnauthorizedException('You can only logout with your own refresh token')
+      }
+
+      // Xoá refresh token khỏi database
+      await this.prisma.refreshToken.delete({
+        where: {
+          token,
+        },
+      })
+
+      return { message: 'Logged out successfully' }
+    } catch (error) {
+      if (isPrismaNotFoundError(error)) {
+        throw new UnauthorizedException('Refresh token already revoked')
+      }
+
+      if (isJwtError(error)) {
+        throw new UnauthorizedException('Invalid refresh token')
+      }
+
+      throw error
+    }
+  }
+
   // Xử lý tạo ra accessToken và refreshToken sau đó lưu thông tin vào database refreshToken
   private async generateTokens(userId: number) {
     const accessToken = this.tokenService.signAcessToken({ userId })

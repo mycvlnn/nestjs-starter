@@ -38,3 +38,5 @@ export class RefreshTokenDto {
   @IsString()
   refreshToken: string
 }
+
+export class LogoutDto extends RefreshTokenDto {}

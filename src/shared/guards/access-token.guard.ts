@@ -2,6 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from
 import { Request } from 'express'
 import { TokenService } from '../services/token.service.js'
 import { USER_REQUEST_KEY } from '../../constants/auth.constant.js'
+import { isJwtError } from '../../common/guards/error.guard.js'
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
@@ -17,7 +18,10 @@ export class AccessTokenGuard implements CanActivate {
       const payload = this.tokenService.verifyAcessToken(token)
       request[USER_REQUEST_KEY] = payload
     } catch (error) {
-      throw new UnauthorizedException(error)
+      if (isJwtError(error)) {
+        throw new UnauthorizedException('Invalid access token')
+      }
+      throw error
     }
     return true
   }
