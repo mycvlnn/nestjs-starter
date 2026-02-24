@@ -19,7 +19,7 @@ export class AccessTokenGuard implements CanActivate {
       request[USER_REQUEST_KEY] = payload
     } catch (error) {
       if (isJwtError(error)) {
-        throw new UnauthorizedException('Invalid access token')
+        throw new UnauthorizedException(error.message)
       }
       throw error
     }
