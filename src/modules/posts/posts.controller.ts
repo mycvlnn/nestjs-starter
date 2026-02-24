@@ -1,18 +1,22 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { PostsService } from './posts.service.js'
-import { CreatePostBodyDto, UpdatePostDto } from './posts.dto.js'
+import { CreatePostBodyDto, PostItemDto, UpdatePostDto } from './posts.dto.js'
 import { PostModel } from 'generated/prisma/models.js'
 import { AuthGuard } from '../../common/decorators/auth.decorator.js'
 import { User } from '../../common/decorators/user.decorator.js'
 import { AuthKind } from './../../constants/auth.constant.js'
+import { plainToInstance } from 'class-transformer'
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  getPosts() {
-    return this.postsService.getPosts()
+  @AuthGuard([AuthKind.Bearer])
+  async getPosts(@User('userId') userId: number) {
+    const result = await this.postsService.getPosts(userId)
+
+    return plainToInstance(PostItemDto, result)
   }
 
   @Get(':id')
