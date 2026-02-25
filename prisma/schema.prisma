@@ -32,6 +32,7 @@ model Post {
 }
 
 model RefreshToken {
+  id        Int      @id @default(autoincrement())
   token     String   @unique
   userId    Int
   expiresAt DateTime
