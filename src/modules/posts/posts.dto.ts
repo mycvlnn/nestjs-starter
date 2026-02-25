@@ -1,7 +1,6 @@
 import { IsOptional, IsString, Length } from 'class-validator'
-import { PostModel } from '../../shared/models/post.model.js'
 import { Type } from 'class-transformer'
-import { UserModel } from '../../shared/models/user.model.js'
+import { UserResDto } from '../auth/auth.dto.js'
 
 export class CreatePostBodyDto {
   @IsString()
@@ -25,12 +24,18 @@ export class UpdatePostDto {
   content: string
 }
 
-export class PostItemDto extends PostModel {
-  @Type(() => UserModel)
-  author: Omit<UserModel, 'password'> // Loại bỏ trường password khi trả về thông tin tác giả
+export class PostDetailResDto {
+  id: number
+  title: string
+  content: string
+  authorId: number
+  createdAt: Date
+  updatedAt: Date
 
-  constructor(partial: Partial<PostItemDto>) {
-    super(partial)
+  @Type(() => UserResDto)
+  author: UserResDto
+
+  constructor(partial: Partial<PostDetailResDto>) {
     Object.assign(this, partial)
   }
 }

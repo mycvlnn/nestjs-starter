@@ -1,11 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
+
 import { PostsService } from './posts.service.js'
-import { CreatePostBodyDto, PostItemDto, UpdatePostDto } from './posts.dto.js'
-import { PostModel } from 'generated/prisma/models.js'
+import { CreatePostBodyDto, UpdatePostDto } from './posts.dto.js'
 import { AuthGuard } from '../../common/decorators/auth.decorator.js'
 import { User } from '../../common/decorators/user.decorator.js'
 import { AuthKind } from './../../constants/auth.constant.js'
-import { plainToInstance } from 'class-transformer'
 
 @Controller('posts')
 export class PostsController {
@@ -13,14 +12,12 @@ export class PostsController {
 
   @Get()
   @AuthGuard([AuthKind.Bearer])
-  async getPosts(@User('userId') userId: number) {
-    const result = await this.postsService.getPosts(userId)
-
-    return plainToInstance(PostItemDto, result)
+  getPosts() {
+    return this.postsService.getPosts()
   }
 
   @Get(':id')
-  getPost(@Param('id') id: string): Promise<PostModel | null> {
+  getPost(@Param('id') id: string) {
     return this.postsService.getPost({
       id: Number(id),
     })
@@ -35,7 +32,11 @@ export class PostsController {
   @Put(':id')
   @AuthGuard([AuthKind.Bearer])
   updatePost(@Param('id') id: string, @Body() body: UpdatePostDto, @User('userId') userId: number) {
-    return this.postsService.updatePost(id, body, userId)
+    return this.postsService.updatePost({
+      postId: id,
+      post: body,
+      userId,
+    })
   }
 
   @Delete(':id')

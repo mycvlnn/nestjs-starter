@@ -1,84 +1,99 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common'
-import { CreatePostBodyDto, UpdatePostDto } from './posts.dto.js'
+import { Injectable, NotFoundException } from '@nestjs/common'
+import { plainToInstance } from 'class-transformer'
+
+import { CreatePostBodyDto, PostDetailResDto, UpdatePostDto } from './posts.dto.js'
 import { PrismaService } from '../../shared/services/prisma.service.js'
 import { Post, Prisma } from '../../../generated/prisma/client.js'
+import { isPrismaNotFoundError } from '../../common/guards/error.guard.js'
 
 @Injectable()
 export class PostsService {
   constructor(private prisma: PrismaService) {}
-  getPosts(userId: number) {
-    return this.prisma.post.findMany({
-      where: {
-        authorId: userId,
-      },
+  async getPosts() {
+    const result = await this.prisma.post.findMany({
       include: {
-        author: {
-          omit: {
-            password: true,
-          },
-        },
+        author: true,
       },
     })
+
+    return plainToInstance(PostDetailResDto, result)
   }
 
   async getPost(postWhereUniqueInput: Prisma.PostWhereUniqueInput): Promise<Post | null> {
-    const post = await this.prisma.post.findUnique({
-      where: postWhereUniqueInput,
-    })
+    try {
+      const post = await this.prisma.post.findUniqueOrThrow({
+        where: postWhereUniqueInput,
+        include: {
+          author: true,
+        },
+      })
 
-    if (!post) {
-      throw new NotFoundException('Post not found')
+      return new PostDetailResDto(post)
+    } catch (error) {
+      if (isPrismaNotFoundError(error)) {
+        throw new NotFoundException('Post not found')
+      }
+
+      throw error
     }
-
-    return post
   }
 
-  createPost(post: CreatePostBodyDto, authorId: number) {
-    return this.prisma.post.create({
+  async createPost(post: CreatePostBodyDto, authorId: number) {
+    const result = await this.prisma.post.create({
       data: {
         title: post.title,
         content: post.content,
         authorId,
       },
+      include: {
+        author: true,
+      },
     })
+
+    return new PostDetailResDto(result)
   }
 
-  async updatePost(id: string, post: UpdatePostDto, userId: number) {
-    const existingPost = await this.prisma.post.findUnique({
-      where: { id: Number(id) },
-    })
+  async updatePost({
+    postId,
+    post,
+    userId,
+  }: {
+    postId: string
+    post: UpdatePostDto
+    userId: number
+  }) {
+    try {
+      const result = await this.prisma.post.update({
+        where: { id: Number(postId), authorId: userId },
+        data: post,
+        include: {
+          author: true,
+        },
+      })
 
-    if (!existingPost) {
-      throw new NotFoundException('Post not found')
+      return new PostDetailResDto(result)
+    } catch (error) {
+      if (isPrismaNotFoundError(error)) {
+        throw new NotFoundException('Post not found')
+      }
+
+      throw error
     }
-
-    if (existingPost.authorId !== userId) {
-      throw new ForbiddenException('You can only update your own posts')
-    }
-
-    return this.prisma.post.update({
-      where: { id: Number(id) },
-      data: post,
-    })
   }
 
   async deletePost(id: string, userId: number) {
-    const existingPost = await this.prisma.post.findUnique({
-      where: { id: Number(id) },
-    })
+    try {
+      await this.prisma.post.delete({
+        where: { id: Number(id), authorId: userId },
+      })
 
-    if (!existingPost) {
-      throw new NotFoundException('Post not found')
+      return { message: 'Post deleted successfully' }
+    } catch (error) {
+      if (isPrismaNotFoundError(error)) {
+        throw new NotFoundException('Post not found')
+      }
+
+      throw error
     }
-
-    if (existingPost.authorId !== userId) {
-      throw new ForbiddenException('You can only delete your own posts')
-    }
-
-    await this.prisma.post.delete({
-      where: { id: Number(id) },
-    })
-
-    return { message: 'Post deleted successfully' }
   }
 }
